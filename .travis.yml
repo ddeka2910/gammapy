@@ -97,7 +97,49 @@ jobs:
         # Test example scripts
         - env: PYTHON_VERSION=3.7 CMD='make test-scripts'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
+        #powerjobs
+        # Main test, used for coverage
+        - stage: Initial tests
+          arch: ppc64le
+          env: TEST_COVERAGE=true CMD='make test-cov'
+               PIP_DEPENDENCIES="$PIP_DEPENDENCIES pytest-cov codecov"
 
+        # Run tests without optional dependencies
+        - env: PYTHON_VERSION=3.7 CMD='make test'
+               CONDA_DEPENDENCIES='Cython click regions requests tqdm'
+               PIP_DEPENDENCIES='pytest-astropy parfive pydantic'
+          arch: ppc64le
+        # Run tests without GAMMAPY_DATA available
+        - stage: Initial tests
+          env: CMD='make test'
+               FETCH_GAMMAPY_DATA=false
+          arch: ppc64le
+        # Build docs
+        - env: CMD='make docs-all fmt=False'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_DOCS
+        arch: ppc64le
+        # Test conda build (which runs a bunch of useful tests after building the package)
+        # See https://conda.io/docs/bdist_conda.html
+        - env: CMD='python setup.py bdist_conda'
+               TEST_PACKAGING=true CONDA_CHANNELS='astropy sherpa conda-forge'
+          arch: ppc64le
+        # Test with Astropy dev version
+        - env: PYTHON_VERSION=3.7 ASTROPY_VERSION=dev CMD='make test'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
+          arch: ppc64le
+        # Test with Sherpa dev, this may take a longer time
+        - env: PYTHON_VERSION=3.7 SETUP_CMD='make test'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA DEBUG=True
+               PIP_DEPENDENCIES='git+http://github.com/sherpa/sherpa.git#egg=sherpa pytest-astropy parfive pydantic'
+          arch: ppc64le
+        # Test Jupyter notebooks
+        - env: PYTHON_VERSION=3.7 CMD='make test-nb'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_DOCS
+
+        # Test example scripts
+        - env: PYTHON_VERSION=3.7 CMD='make test-scripts'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
+          arch: ppc64le
 
 install:
     - git clone git://github.com/astropy/ci-helpers.git
