@@ -2,7 +2,6 @@
 # This travis-ci build matrix config is a modified copy of the one from Astropy
 #
 
-
 # We can't use `language: python` here because it's not supported on Mac.
 # But that's OK ... the language here is irrelevant because we use conda
 # to install our own Python.
